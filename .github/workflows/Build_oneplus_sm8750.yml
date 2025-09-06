@@ -257,7 +257,9 @@ jobs:
             fi
             # Apply patches
             cd ./common
-            if [ "$DEVICES_NAME" != "oneplus_ace5_ultra" ] || [ "${REPO_MANIFEST}" != "realme_GT7" ]; then
+            if [ "${DEVICES_NAME}" = "oneplus_ace5_ultra" ] || [ "${DEVICES_NAME}" = "realme_GT7" ]; then
+              echo "跳过 LZ4 操作（匹配到 $DEVICES_NAME）"
+            else
                 files=(
                     "lib/lz4/lz4_compress.c"
                     "lib/lz4/lz4_decompress.c"
