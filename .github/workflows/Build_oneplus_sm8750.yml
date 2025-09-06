@@ -277,7 +277,6 @@ jobs:
                 done
                 ./main.bin "setup_lz4"
             fi
-            #./main.bin "${{ inputs.custom_Serialid_suffix }}"
             rm -rf ./main.bin
             
             if [ "${REPO_MANIFEST}" = "realme_GT7pro_Speed" ] || [ "${REPO_MANIFEST}" = "realme_GT7pro" ]; then
