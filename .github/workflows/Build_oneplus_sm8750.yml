@@ -18,7 +18,7 @@ on:
         default: 'oneplus_ace5_pro'
 
       custom_Serialid_suffix:
-        description: "📱请输入设备唯一SN码"
+        description: "📱请输入设备唯一SN码(获取脚本：https://e46q.ewn.cc)"
         required: true
 
       keep_original_settings:
