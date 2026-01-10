@@ -35,19 +35,25 @@ on:
         required: false
         default: ''
 
-      enable_feature_z:
+      enable_scx:
         description: "添加完美风驰"
         required: false
         default: true
         type: boolean
 
-      enable_feature_a:
+      enable_bbg:
         description: "开启BBG基带守护"
         required: false
         default: true
         type: boolean
+        
+      enable_hymo:
+        description: "添加Hymo实现(高性能混合挂载元模块)"
+        required: false
+        default: true
+        type: boolean
 
-      enable_feature_b:
+      enable_network:
          description: "选择网络调度"
          required: false
          type: choice
@@ -64,14 +70,14 @@ jobs:
     name: Build_${{ github.event.inputs.DEVICES_NAME }}
     runs-on: ubuntu-latest
     env:
-      DEVICES_NAME:          ${{ github.event.inputs.DEVICES_NAME }}
+      DEVICES_NAME:           ${{ github.event.inputs.DEVICES_NAME }}
       KEEP_ORIGINAL_SETTINGS: ${{ github.event.inputs.keep_original_settings }}
       CUSTOM_KERNEL_SUFFIX:   ${{ github.event.inputs.custom_kernel_suffix }}
       CUSTOM_KERNEL_TIME:     ${{ github.event.inputs.custom_kernel_time }}
-      ENABLE_FEATURE_Z:       ${{ github.event.inputs.enable_feature_z }}
-      ENABLE_FEATURE_A:       ${{ github.event.inputs.enable_feature_a }}
-      ENABLE_FEATURE_B:       ${{ github.event.inputs.enable_feature_b }}
-      ENABLE_FEATURE_C:       ${{ github.event.inputs.enable_feature_c }}
+      ENABLE_SCX:       ${{ github.event.inputs.enable_scx }}
+      ENABLE_BBG:       ${{ github.event.inputs.enable_bbg }}
+      ENABLE_NETWORK:       ${{ github.event.inputs.enable_network }}
+      ENABLE_HYMO:            ${{ github.event.inputs.enable_hymo }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -261,7 +267,7 @@ jobs:
           patch -p1 < 002-zstd.patch || true
           
       - name: 🔧 Set Baseband-guard (开启BBG基带守护)
-        if: ${{ env.ENABLE_FEATURE_A == 'true' }}
+        if: ${{ env.ENABLE_BBG == 'true' }}
         run: |
           cd kernel_workspace/common
           echo "正在启用BBG基带守护…"
@@ -341,6 +347,12 @@ jobs:
           cp ./SukiSU_patch/69_hide_stuff.patch ./common/
           cd ./common
           patch -p1 < 50_add_susfs_in_gki-android15-6.6.patch || true
+          if [ "${{ env.ENABLE_HYMO }}" = "true" ]; then
+            echo "添加Hymo-高性能混合挂载元模块"
+            wget https://raw.githubusercontent.com/Anatdx/HymoFS/refs/heads/android15_6.6/patch/hymofs_with_susfs.patch
+            patch -p1 -F 3 < hymofs_with_susfs.patch
+            echo "CONFIG_HYMOFS=y" >> ./arch/arm64/configs/gki_defconfig
+          fi
 
 
 
@@ -363,7 +375,7 @@ jobs:
           echo "CONFIG_ZRAM_WRITEBACK=y" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_SWAP=y" >> ./common/arch/arm64/configs/gki_defconfig
 
-          if [ "${{ env.ENABLE_B }}" = "BBR" ]; then
+          if [ "${{ env.ENABLE_NETWORK }}" = "BBR" ]; then
             echo "CONFIG_TCP_CONG_ADVANCED=y" >> ./common/arch/arm64/configs/gki_defconfig
             echo "CONFIG_TCP_CONG_BBR=y" >> ./common/arch/arm64/configs/gki_defconfig
             echo "CONFIG_NET_SCH_FQ=y" >> ./common/arch/arm64/configs/gki_defconfig
@@ -373,7 +385,7 @@ jobs:
             echo "CONFIG_TCP_CONG_HTCP=n" >> ./common/arch/arm64/configs/gki_defconfig
             echo "CONFIG_DEFAULT_TCP_CONG=bbr" >> ./common/arch/arm64/configs/gki_defconfig
           fi
-          if [ "${{ env.ENABLE_B }}" = "FQ_CODEL" ]; then
+          if [ "${{ env.ENABLE_NETWORK }}" = "FQ_CODEL" ]; then
             echo "CONFIG_NET_SCH_FQ_CODEL=y" >> ./common/arch/arm64/configs/gki_defconfig
             echo "CONFIG_NET_SCH_FQ=y" >> ./common/arch/arm64/configs/gki_defconfig
             echo "CONFIG_NET_SCH_SFQ=y" >> ./common/arch/arm64/configs/gki_defconfig
@@ -421,7 +433,7 @@ jobs:
           
       - name: 🔧 Apply Sched Patch (应用完美风驰补丁)
         run: |
-          if [ "${{ env.ENABLE_FEATURE_Z }}" = "true" ]; then
+          if [ "${{ env.ENABLE_SCX }}" = "true" ]; then
             if [ "$SCHED_FILE" = "none" ]; then
               echo "该机型自带风驰，跳过应用补丁"
             else
