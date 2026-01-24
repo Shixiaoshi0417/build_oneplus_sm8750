@@ -46,22 +46,12 @@ on:
         required: false
         default: true
         type: boolean
-        
-      enable_hymo:
-        description: "添加Hymo实现(高性能混合挂载元模块)"
+
+      enable_unicode_bypass:
+        description: "应用Unicode零宽绕过补丁"
         required: false
         default: true
         type: boolean
-
-      enable_network:
-         description: "选择网络调度"
-         required: false
-         type: choice
-         options:
-            - 'FQ_CODEL'
-            - 'BBR'
-         default: 'FQ_CODEL'
-      
        
 
 
@@ -76,8 +66,7 @@ jobs:
       CUSTOM_KERNEL_TIME:     ${{ github.event.inputs.custom_kernel_time }}
       ENABLE_SCX:       ${{ github.event.inputs.enable_scx }}
       ENABLE_BBG:       ${{ github.event.inputs.enable_bbg }}
-      ENABLE_NETWORK:       ${{ github.event.inputs.enable_network }}
-      ENABLE_HYMO:            ${{ github.event.inputs.enable_hymo }}
+      ENABLE_UNICODE_BYPASS: ${{ github.event.inputs.enable_unicode_bypass }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -347,11 +336,10 @@ jobs:
           cp ./SukiSU_patch/69_hide_stuff.patch ./common/
           cd ./common
           patch -p1 < 50_add_susfs_in_gki-android15-6.6.patch || true
-          if [ "${{ env.ENABLE_HYMO }}" = "true" ]; then
-            echo "添加Hymo-高性能混合挂载元模块"
-            wget https://raw.githubusercontent.com/Anatdx/HymoFS/refs/heads/android15_6.6/patch/hymofs_with_susfs.patch
-            patch -p1 -F 3 < hymofs_with_susfs.patch
-            echo "CONFIG_HYMOFS=y" >> ./arch/arm64/configs/gki_defconfig
+          if [ "${{ env.ENABLE_UNICODE_BYPASS }}" = "true" ]; then
+            cp "${GITHUB_WORKSPACE}/.github/workflows/Bin/unicode_bypass_fix.patch" ./
+            echo "📦 正在应用Unicode零宽绕过修复补丁..."
+            patch -p1 < unicode_bypass_fix.patch
           fi
 
 
@@ -374,29 +362,18 @@ jobs:
           echo "CONFIG_ZRAM=y" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_ZRAM_WRITEBACK=y" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_SWAP=y" >> ./common/arch/arm64/configs/gki_defconfig
-
-          if [ "${{ env.ENABLE_NETWORK }}" = "BBR" ]; then
-            echo "CONFIG_TCP_CONG_ADVANCED=y" >> ./common/arch/arm64/configs/gki_defconfig
-            echo "CONFIG_TCP_CONG_BBR=y" >> ./common/arch/arm64/configs/gki_defconfig
-            echo "CONFIG_NET_SCH_FQ=y" >> ./common/arch/arm64/configs/gki_defconfig
-            echo "CONFIG_TCP_CONG_BIC=n" >> ./common/arch/arm64/configs/gki_defconfig
-            echo "CONFIG_TCP_CONG_CUBIC=n" >> ./common/arch/arm64/configs/gki_defconfig
-            echo "CONFIG_TCP_CONG_WESTWOOD=n" >> ./common/arch/arm64/configs/gki_defconfig
-            echo "CONFIG_TCP_CONG_HTCP=n" >> ./common/arch/arm64/configs/gki_defconfig
-            echo "CONFIG_DEFAULT_TCP_CONG=bbr" >> ./common/arch/arm64/configs/gki_defconfig
-          fi
-          if [ "${{ env.ENABLE_NETWORK }}" = "FQ_CODEL" ]; then
-            echo "CONFIG_NET_SCH_FQ_CODEL=y" >> ./common/arch/arm64/configs/gki_defconfig
-            echo "CONFIG_NET_SCH_FQ=y" >> ./common/arch/arm64/configs/gki_defconfig
-            echo "CONFIG_NET_SCH_SFQ=y" >> ./common/arch/arm64/configs/gki_defconfig
-            echo "CONFIG_NET_SCH_HTB=y" >> ./common/arch/arm64/configs/gki_defconfig
-            echo "CONFIG_NET_SCH_TBF=y" >> ./common/arch/arm64/configs/gki_defconfig
-            echo "CONFIG_NET_SCH_SFB=y" >> ./common/arch/arm64/configs/gki_defconfig
-            echo "CONFIG_NET_SCH_RED=y" >> ./common/arch/arm64/configs/gki_defconfig
-            echo "CONFIG_NET_SCH_INGRESS=y" >> ./common/arch/arm64/configs/gki_defconfig
-            echo "CONFIG_DEFAULT_FQ_CODEL=y" >> ./common/arch/arm64/configs/gki_defconfig
-            echo 'CONFIG_DEFAULT_NET_SCH="fq_codel"' >> ./common/arch/arm64/configs/gki_defconfig
-          fi
+          
+          echo "CONFIG_NET_SCH_FQ_CODEL=y" >> ./common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_NET_SCH_FQ=y" >> ./common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_NET_SCH_SFQ=y" >> ./common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_NET_SCH_HTB=y" >> ./common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_NET_SCH_TBF=y" >> ./common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_NET_SCH_SFB=y" >> ./common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_NET_SCH_RED=y" >> ./common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_NET_SCH_INGRESS=y" >> ./common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_DEFAULT_FQ_CODEL=y" >> ./common/arch/arm64/configs/gki_defconfig
+          echo 'CONFIG_DEFAULT_NET_SCH="fq_codel"' >> ./common/arch/arm64/configs/gki_defconfig
+          
           echo "CONFIG_IP_ECN=y" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_TCP_ECN=y" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_IPV6_ECN=y" >> ./common/arch/arm64/configs/gki_defconfig
