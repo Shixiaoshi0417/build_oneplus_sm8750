@@ -11,16 +11,16 @@
 ```bash
 https://t.me/qdyKernel/405
 ```
-## 🎁②本地脚本使用方法
+## 🎁②本地脚本使用方法(长期未维护请勿使用)
 > ⚠️ 注意：如果想使用自己fork的仓库进行编译，fork时如更改了仓库名，请将下方“使用方法”中的 `build_oneplus_sm8750` 改成你修改后的项目名并将下方链接中的 `showdo` 改成你的 GitHub 用户名。  
 > 比如你的用户名是 `abcd`，仓库名为`123456`则命令为：  
 > `git clone https://github.com/abcd/123456.git`
 ---
 ```bash
-git clone https://github.com/showdo/build_oneplus_sm8750.git
+git clone https://github.com/showdo/Build_Oneplus_Realme_Action.git
 ```
 ```bash
-cd build_oneplus_sm8750
+cd Build_Oneplus_Realme_Action
 ```
 ```bash
 chmod +x Build_sm8750.sh
