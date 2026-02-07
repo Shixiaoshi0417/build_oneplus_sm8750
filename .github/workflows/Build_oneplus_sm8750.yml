@@ -78,7 +78,6 @@ jobs:
       - name: ⚙️ Set REPO_MANIFEST (设置对应机型配置文件)
         run: |
           if [ "${{ env.KSU_TYPE }}" == 'ReSukiSU' ]; then
-            echo "KSUVER_TAG=-ReSukiSU" >> $GITHUB_ENV
             echo "KSUVER_TAG_Number=30700" >> $GITHUB_ENV
           else
             echo "KSUVER_TAG_Number=37185" >> $GITHUB_ENV
@@ -286,7 +285,11 @@ jobs:
           done
           [ -z "$KSU_API_VERSION" ] && KSU_API_VERSION="4.1.0"
           echo "KSU_API_VERSION=$KSU_API_VERSION" >> $GITHUB_ENV
-          VERSION_DEFINITIONS=$'define get_ksu_version_full\nv\\$1-'"$GIT_COMMIT_HASH"$'${{ env.KSUVER_TAG }}-TG@qdykernel\nendef\n\nKSU_VERSION_API := '"$KSU_API_VERSION"$'\nKSU_VERSION_FULL := v'"$KSU_API_VERSION"$'-'"$GIT_COMMIT_HASH"$'${{ env.KSUVER_TAG }}-TG@qdykernel'
+           if [ "${{ env.KSU_TYPE }}" == 'ReSukiSU' ]; then
+            VERSION_DEFINITIONS=$'define get_ksu_version_full\nv\\$1-'"$GIT_COMMIT_HASH"$'-Re-TG@qdykernel\nendef\n\nKSU_VERSION_API := '"$KSU_API_VERSION"$'\nKSU_VERSION_FULL := v'"$KSU_API_VERSION"$'-'"$GIT_COMMIT_HASH"$'-Re-TG@qdykernel'
+          else
+            VERSION_DEFINITIONS=$'define get_ksu_version_full\nv\\$1-'"$GIT_COMMIT_HASH"$'-TG@qdykernel\nendef\n\nKSU_VERSION_API := '"$KSU_API_VERSION"$'\nKSU_VERSION_FULL := v'"$KSU_API_VERSION"$'-'"$GIT_COMMIT_HASH"$'-TG@qdykernel'
+          fi
           sed -i '/define get_ksu_version_full/,/endef/d' kernel/Kbuild
           sed -i '/KSU_VERSION_API :=/d' kernel/Kbuild
           sed -i '/KSU_VERSION_FULL :=/d' kernel/Kbuild
@@ -302,7 +305,6 @@ jobs:
 
           grep -A10 "REPO_OWNER" kernel/Kbuild 
           grep "KSU_VERSION_FULL" kernel/Kbuild 
-          echo "${{ env.KSU_TYPE }}版本号: v${KSU_API_VERSION}-${GIT_COMMIT_HASH}${{ env.KSUVER_TAG }}-TG@qdykernel"
 
             
       - name: 🔧 Set up SUSFS (配置 SUSFS)
