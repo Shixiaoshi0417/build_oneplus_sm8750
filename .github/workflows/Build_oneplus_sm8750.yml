@@ -268,7 +268,6 @@ jobs:
           echo "正在配置${{ env.KSU_TYPE }}..."
           curl -LSs "https://raw.githubusercontent.com/${{ env.KSU_TYPE }}/${{ env.KSU_TYPE }}/refs/heads/main/kernel/setup.sh" | bash -s main
           if [ "${{ env.KSU_TYPE }}" == 'ReSukiSU' ]; then
-            echo 'KSU_FULL_NAME_FORMAT="%TAG_NAME%-%COMMIT_SHA%-Re-TG@qdykernel"' >> ./common/arch/arm64/configs/gki_defconfig
             cd ./KernelSU
             KSU_VERSION=$(expr $(git rev-list --count main) + 30700 2>/dev/null || echo 114514)
             echo "KSUVER=$KSU_VERSION" >> $GITHUB_ENV
@@ -329,6 +328,7 @@ jobs:
           
           if [ "${{ env.KSU_TYPE }}" == 'ReSukiSU' ]; then
             echo "CONFIG_KSU_MULTI_MANAGER_SUPPORT=y" >> ./common/arch/arm64/configs/gki_defconfig
+            echo 'KSU_FULL_NAME_FORMAT="%TAG_NAME%-%COMMIT_SHA%-Re-TG@qdykernel"' >> ./common/arch/arm64/configs/gki_defconfig
           fi
           
           echo "CONFIG_CRYPTO_LZ4=y" >> ./common/arch/arm64/configs/gki_defconfig
