@@ -311,6 +311,8 @@ jobs:
           cd kernel_workspace
           git clone https://gitlab.com/simonpunk/susfs4ksu.git -b gki-android15-6.6
           cd KernelSU 
+          git config --global user.email "qiudaoyu2888@gmail.com"
+          git config --global user.name "Q1udaoyu"
           git revert e16cf610855b73fd248d9e3609cd993ec667de02
           cd ..
           cd common
