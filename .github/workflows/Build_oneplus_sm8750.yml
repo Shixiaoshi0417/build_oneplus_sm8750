@@ -208,10 +208,10 @@ jobs:
         id: ccache-restore
         with:
           path: ${{ env.CCACHE_DIR }}
-          key: ccache-neov4-${{ env.KSU_TYPE }}-${{ env.DEVICES_NAME }}-${{ runner.os }}-main
+          key: ccache-${{ env.KSU_TYPE }}-${{ env.DEVICES_NAME }}-${{ runner.os }}-main
           restore-keys: |
-            ccache-neov4-${{ env.KSU_TYPE }}-${{ env.DEVICES_NAME }}-${{ runner.os }}-
-            ccache-neov4-${{ env.KSU_TYPE }}-${{ env.DEVICES_NAME }}-
+            ccache-${{ env.KSU_TYPE }}-${{ env.DEVICES_NAME }}-${{ runner.os }}-
+            ccache-${{ env.KSU_TYPE }}-${{ env.DEVICES_NAME }}-
       
       - name: 📥 Init ccache (初始化配置ccache)
         run: |
