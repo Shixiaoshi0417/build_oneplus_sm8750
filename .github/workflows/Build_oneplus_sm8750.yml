@@ -321,8 +321,11 @@ jobs:
           else
             git clone https://gitlab.com/simonpunk/susfs4ksu.git -b gki-android15-6.6
             cp ./susfs4ksu/kernel_patches/50_add_susfs_in_gki-android15-6.6.patch ./common/
+            wget https://github.com/cctv18/oppo_oplus_realme_sm8750/raw/refs/heads/main/other_patch/69_hide_stuff.patch -O ./common/69_hide_stuff.patch
+            cd ./common
+            patch -p1 < 69_hide_stuff.patch || true
+            cd ..
           fi
-          git clone https://github.com/ShirkNeko/SukiSU_patch.git
           cp ./susfs4ksu/kernel_patches/50_add_susfs_in_gki-android15-6.6.patch ./common/
           cp ./susfs4ksu/kernel_patches/fs/* ./common/fs/
           cp ./susfs4ksu/kernel_patches/include/linux/* ./common/include/linux/
