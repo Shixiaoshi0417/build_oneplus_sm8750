@@ -309,16 +309,27 @@ jobs:
       - name: 🔧 Set up SUSFS (配置 SUSFS)
         run: |
           cd kernel_workspace
-          echo "正在添加SUSFS补丁..."
-          git clone https://gitlab.com/simonpunk/susfs4ksu.git -b gki-android15-6.6
+          echo "[INFO] 开始添加 SUSFS 补丁..."
+          echo "[INFO] 克隆 susfs4ksu 仓库..."
+          git clone --depth=1 https://gitlab.com/simonpunk/susfs4ksu.git
+          cd susfs4ksu
+          echo "[INFO] 切换到指定提交"
+          git fetch --depth=1 origin f77334c982f9970958b856665c4d26ddf75e8248
+          git checkout FETCH_HEAD
+          cd ..
+          echo "[OK] susfs4ksu 准备完成"
+          echo "[INFO] 克隆 SukiSU_patch 仓库..."
           git clone https://github.com/ShirkNeko/SukiSU_patch.git
+          echo "[OK] SukiSU_patch 克隆完成"
+          echo "[INFO] 拷贝 SUSFS 补丁文件..."
           cp ./susfs4ksu/kernel_patches/50_add_susfs_in_gki-android15-6.6.patch ./common/
           cp ./susfs4ksu/kernel_patches/fs/* ./common/fs/
           cp ./susfs4ksu/kernel_patches/include/linux/* ./common/include/linux/
+          echo "[OK] 补丁文件拷贝完成"
+          echo "[INFO] 尝试应用 patch（失败不终止）..."
           cd ./common
-          patch -p1 < 50_add_susfs_in_gki-android15-6.6.patch || true
+          patch -p1 < 50_add_susfs_in_gki-android15-6.6.patch || echo "[WARN] patch 应用失败，后续使用 sed 兜底"
           cd ..
-          echo "[INFO] 当前工作目录：$(pwd)"
           echo "[INFO] 检查 susfs_def.h 是否存在..."
           if test -f common/include/linux/susfs_def.h; then
             echo "[OK] 已找到 common/include/linux/susfs_def.h"
@@ -330,22 +341,34 @@ jobs:
           echo "[INFO] 目标文件：$BASE_C"
           echo "[INFO] 检查是否已包含 susfs_def.h ..."
           if grep -q 'susfs_def.h' "$BASE_C"; then
-            echo "[SKIP] $BASE_C 中已包含 susfs_def.h，无需重复添加"
+            echo "[SKIP] $BASE_C 中已包含 susfs_def.h"
           else
-            echo "[info] 正在向 $BASE_C 插入 susfs_def.h 引用..."
-            sed -i '/#include <linux\/cpufreq_times.h>/a \
+            echo "[INFO] 准备插入 susfs_def.h 引用..."
+            if grep -q '#include <linux/cpufreq_times.h>' "$BASE_C"; then
+              sed -i '/#include <linux\/cpufreq_times.h>/a \
           \
           #ifdef CONFIG_KSU_SUSFS_SUS_MAP\
           #include <linux/susfs_def.h>\
           #endif\
           ' "$BASE_C"
-            echo "[OK] 已插入 susfs_def.h 引用"
+              echo "[OK] susfs_def.h 引用已插入"
+            else
+              echo "[ERR] 未找到 cpufreq_times.h include，无法插入 susfs_def.h"
+              exit 1
+            fi
           fi
-          echo "[INFO] 清理可能存在的补丁残留文件 base.c.rej ..."
+          echo "[INFO] 清理可能存在的 patch 残留文件..."
           rm -f common/fs/proc/base.c.rej
           echo "[OK] 清理完成（如存在）"
           echo "[INFO] 最终校验 susfs_def.h 插入结果："
-          grep -n 'susfs_def.h' "$BASE_C" && echo "[成功] 校验通过"
+          if grep -n 'susfs_def.h' "$BASE_C"; then
+            echo "[OK] 最终校验通过"
+          else
+            echo "[ERR] 最终校验失败"
+            exit 1
+          fi
+          echo "[OK] SUSFS 补丁处理流程全部完成"
+
 
 
           
