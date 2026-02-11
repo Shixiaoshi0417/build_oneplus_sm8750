@@ -268,10 +268,6 @@ jobs:
           echo "正在配置${{ env.KSU_TYPE }}..."
           if [ "${{ env.KSU_TYPE }}" == 'ReSukiSU' ]; then
             curl -LSs "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/refs/heads/main/kernel/setup.sh" | bash -s main
-            cd ./KernelSU
-            KSU_VERSION=$(expr $(git rev-list --count main) + 30700 2>/dev/null || echo 114514)
-            echo "KSUVER=$KSU_VERSION" >> $GITHUB_ENV
-            echo "ksuver=$KSU_VERSION" >> $GITHUB_OUTPUT
           else
             curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/refs/heads/main/kernel/setup.sh" | bash -s builtin
             cd ./KernelSU
@@ -309,15 +305,23 @@ jobs:
       - name: 🔧 Set up SUSFS (配置 SUSFS)
         run: |
           cd kernel_workspace
-          git clone https://gitlab.com/simonpunk/susfs4ksu.git -b gki-android15-6.6
-          cd KernelSU 
-          git config --global user.email "qiudaoyu2888@gmail.com"
-          git config --global user.name "Q1udaoyu"
-          git revert e16cf610855b73fd248d9e3609cd993ec667de02
-          cd ..
-          cd common
-          wget https://gitlab.com/simonpunk/susfs4ksu/-/raw/f77334c982f9970958b856665c4d26ddf75e8248/kernel_patches/50_add_susfs_in_gki-android15-6.6.patch
-          cd ..
+          if [ "${{ env.KSU_TYPE }}" == 'ReSukiSU' ]; then
+            git clone https://gitlab.com/simonpunk/susfs4ksu.git -b gki-android15-6.6
+            cd KernelSU 
+            git config --global user.email "qiudaoyu2888@gmail.com"
+            git config --global user.name "Q1udaoyu"
+            git revert e16cf610855b73fd248d9e3609cd993ec667de02
+            KSU_VERSION=$(expr $(git rev-list --count main) + 30700 2>/dev/null || echo 114514)
+            echo "KSUVER=$KSU_VERSION" >> $GITHUB_ENV
+            echo "ksuver=$KSU_VERSION" >> $GITHUB_OUTPUT
+            cd ..
+            cd common
+            wget https://gitlab.com/simonpunk/susfs4ksu/-/raw/f77334c982f9970958b856665c4d26ddf75e8248/kernel_patches/50_add_susfs_in_gki-android15-6.6.patch
+            cd ..
+          else
+            git clone https://gitlab.com/simonpunk/susfs4ksu.git -b gki-android15-6.6
+            cp ./susfs4ksu/kernel_patches/50_add_susfs_in_gki-android15-6.6.patch ./common/
+          fi
           git clone https://github.com/ShirkNeko/SukiSU_patch.git
           cp ./susfs4ksu/kernel_patches/50_add_susfs_in_gki-android15-6.6.patch ./common/
           cp ./susfs4ksu/kernel_patches/fs/* ./common/fs/
